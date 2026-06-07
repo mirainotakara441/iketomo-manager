@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>いけとも講座マネージャー</title>
+<style>
+:root {
+  --bg: #0d0d1a;
+  --surface: #161626;
+  --surface2: #1e1e32;
+  --border: rgba(255,255,255,0.08);
+  --border-active: rgba(139,92,246,0.5);
+  --accent: #8b5cf6;
+  --accent2: #6366f1;
+  --text: #e2e8f0;
+  --text-muted: #64748b;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Hiragino Kaku Gothic Pro', 'Meiryo', sans-serif;
+  min-height: 100dvh;
+  padding-bottom: calc(88px + var(--safe-bottom));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: calc(10px + var(--safe-top)) 14px 10px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+header h1 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #a78bfa, #6366f1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.3px;
+}
+.header-actions { display: flex; gap: 6px; }
+.btn-icon {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; flex-shrink: 0;
+}
+.btn-icon:active { opacity: 0.7; }
+
+/* ── Tab bar ── */
+.tab-bar {
+  position: sticky;
+  top: calc(56px + var(--safe-top));
+  z-index: 99;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  padding: 0 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 11px 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab-count {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.58rem;
+  padding: 1px 5px;
+  border-radius: 10px;
+  margin-left: 3px;
+  vertical-align: middle;
+}
+.tab-btn:not(.active) .tab-count { background: var(--surface2); color: var(--text-muted); }
+
+/* ── Content ── */
+.content { padding: 14px; max-width: 560px; margin: 0 auto; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Filter bar ── */
+.filter-bar { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.search-input {
+  width: 100%; padding: 11px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+.search-input:focus { outline: none; border-color: var(--border-active); }
+.search-input::placeholder { color: var(--text-muted); }
+
+.chip-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  padding: 5px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.chip.active {
+  background: rgba(139,92,246,0.15);
+  border-color: var(--border-active);
+  color: var(--accent);
+}
+
+/* ── Cards ── */
+.card-list { display: flex; flex-direction: column; gap: 10px; }
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+.card:active { border-color: var(--border-active); background: rgba(139,92,246,0.04); }
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.card-title { font-size: 0.92rem; font-weight: 700; line-height: 1.35; flex: 1; }
+.card-btns { display: flex; gap: 4px; flex-shrink: 0; }
+.card-btn {
+  width: 30px; height: 30px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem;
+}
+.card-btn:active { opacity: 0.6; }
+
+.card-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 7px; }
+.card-date { font-size: 0.72rem; color: var(--text-muted); }
+
+.badge {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 20px; font-weight: 700;
+}
+.b-purple { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.b-blue   { background: rgba(99,102,241,0.15);  color: #818cf8; }
+.b-green  { background: rgba(16,185,129,0.15);   color: #34d399; }
+.b-yellow { background: rgba(245,158,11,0.15);   color: #fbbf24; }
+.b-gray   { background: rgba(100,116,139,0.15);  color: #94a3b8; }
+
+.card-desc {
+  font-size: 0.78rem; color: var(--text-muted); line-height: 1.55;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  margin-bottom: 8px;
+}
+.card-foot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.card-link {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 0.75rem; color: var(--accent); text-decoration: none; font-weight: 600;
+}
+.mini-badge {
+  font-size: 0.68rem; background: var(--surface2); border: 1px solid var(--border);
+  padding: 2px 8px; border-radius: 6px; color: var(--text-muted);
+}
+.mini-badge em { color: var(--accent); font-style: normal; font-weight: 700; }
+
+.archive-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 0.68rem; background: rgba(139,92,246,0.08);
+  border: 1px solid rgba(139,92,246,0.2); border-radius: 6px;
+  padding: 2px 8px; color: #a78bfa; cursor: pointer; font-weight: 600;
+}
+
+/* ── FAB ── */
+.fab {
+  position: fixed;
+  bottom: calc(18px + var(--safe-bottom));
+  right: 18px;
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; border-radius: 50%;
+  color: #fff; font-size: 1.6rem;
+  cursor: pointer;
+  box-shadow: 0 4px 24px rgba(139,92,246,0.45);
+  z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+  font-family: inherit;
+}
+.fab:active { transform: scale(0.92); }
+
+/* ── Modal ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.72);
+  z-index: 300;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.sheet {
+  background: #18182e;
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 560px;
+  max-height: 92dvh;
+  overflow-y: auto;
+  padding: 6px 16px calc(20px + var(--safe-bottom));
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  -webkit-overflow-scrolling: touch;
+}
+.overlay.open .sheet { transform: translateY(0); }
+.handle {
+  width: 36px; height: 4px;
+  background: rgba(255,255,255,0.18);
+  border-radius: 2px;
+  margin: 10px auto 16px;
+}
+.sheet-title { font-size: 1rem; font-weight: 800; margin-bottom: 16px; }
+
+/* ── Form ── */
+.fg { margin-bottom: 13px; }
+label { display: block; font-size: 0.74rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; }
+input[type="text"],
+input[type="url"],
+input[type="date"],
+textarea,
+select {
+  width: 100%; padding: 11px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none; border-color: var(--border-active);
+}
+textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+select option { background: #1e1e32; }
+.row { display: flex; gap: 8px; }
+.row .fg { flex: 1; }
+
+.btn {
+  padding: 13px 20px; border: none; border-radius: 10px;
+  font-size: 0.9rem; font-weight: 700; cursor: pointer; width: 100%;
+  font-family: inherit; transition: opacity 0.15s;
+}
+.btn:active { opacity: 0.75; }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; }
+.btn-danger { background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid rgba(239,68,68,0.25); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-row { display: flex; gap: 8px; }
+.btn-row .btn { flex: 1; }
+
+/* ── Detail sheet ── */
+.detail-body p { font-size: 0.82rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 10px; }
+.detail-section { border-top: 1px solid var(--border); padding-top: 14px; margin-top: 14px; }
+.detail-section h3 { font-size: 0.78rem; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; }
+.linked-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 12px; margin-bottom: 8px;
+}
+.linked-item .linked-title { font-size: 0.85rem; font-weight: 700; margin-bottom: 5px; }
+.linked-item .linked-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.linked-item .linked-desc { font-size: 0.74rem; color: var(--text-muted); margin-top: 5px; line-height: 1.5; }
+
+/* ── Settings ── */
+.cat-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.cat-item {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 12px;
+}
+.cat-item span { flex: 1; font-size: 0.85rem; }
+.cat-del {
+  width: 26px; height: 26px; background: none; border: none;
+  color: var(--text-muted); cursor: pointer; font-size: 0.9rem;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+}
+.cat-del:active { background: rgba(239,68,68,0.15); color: var(--danger); }
+.cat-add-row { display: flex; gap: 8px; }
+.cat-add-row input { flex: 1; font-size: 16px; }
+.cat-add-btn {
+  padding: 11px 14px; background: var(--surface2);
+  border: 1px solid var(--border-active); border-radius: 8px;
+  color: var(--accent); font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; white-space: nowrap;
+}
+.cat-add-btn:active { opacity: 0.7; }
+
+/* ── Confirm sheet ── */
+.confirm-body { text-align: center; padding: 8px 0 4px; }
+.confirm-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.confirm-body p { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 4px; }
+.confirm-body strong { font-size: 0.92rem; display: block; margin-bottom: 18px; line-height: 1.4; }
+
+/* ── Empty ── */
+.empty { text-align: center; padding: 52px 20px; color: var(--text-muted); }
+.empty .eicon { font-size: 2.8rem; margin-bottom: 12px; }
+.empty p { font-size: 0.82rem; line-height: 1.6; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed;
+  bottom: calc(80px + var(--safe-bottom));
+  left: 16px; right: 16px;
+  max-width: 400px; margin: 0 auto;
+  padding: 12px 16px; border-radius: 10px;
+  font-size: 0.82rem; font-weight: 700; color: #fff;
+  z-index: 999; text-align: center;
+  transform: translateY(12px); opacity: 0;
+  transition: all 0.25s; pointer-events: none;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+/* ── Divider ── */
+.divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header>
+  <h1>📚 いけとも講座</h1>
+  <div class="header-actions">
+    <button class="btn-icon" onclick="openSettings()" title="カテゴリ設定">⚙️</button>
+    <button class="btn-icon" onclick="exportData()" title="エクスポート">📤</button>
+    <button class="btn-icon" onclick="document.getElementById('importFile').click()" title="インポート">📥</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+  </div>
+</header>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" id="tab-archive" onclick="switchTab('archive')">
+    🎬 アーカイブ<span class="tab-count" id="cnt-archive">0</span>
+  </button>
+  <button class="tab-btn" id="tab-material" onclick="switchTab('material')">
+    📄 資料<span class="tab-count" id="cnt-material">0</span>
+  </button>
+  <button class="tab-btn" id="tab-site" onclick="switchTab('site')">
+    🌐 付属サイト<span class="tab-count" id="cnt-site">0</span>
+  </button>
+</div>
+
+<div class="content">
+
+  <!-- Archive panel -->
+  <div class="tab-panel active" id="panel-archive">
+    <div class="filter-bar">
+      <input class="search-input" type="text" id="q-archive" placeholder="🔍 講座名・説明で検索" oninput="renderArchive()" inputmode="search">
+      <div class="chip-row" id="chips-archive"></div>
+    </div>
+    <div class="card-list" id="list-archive"></div>
+  </div>
+
+  <!-- Material panel -->
+  <div class="tab-panel" id="panel-material">
+    <div class="filter-bar">
+      <input class="search-input" type="text" id="q-material" placeholder="🔍 資料名・説明で検索" oninput="renderMaterial()" inputmode="search">
+      <div class="chip-row" id="chips-material"></div>
+    </div>
+    <div class="card-list" id="list-material"></div>
+  </div>
+
+  <!-- Site panel -->
+  <div class="tab-panel" id="panel-site">
+    <div class="filter-bar">
+      <input class="search-input" type="text" id="q-site" placeholder="🔍 サイト名・説明で検索" oninput="renderSite()" inputmode="search">
+      <div class="chip-row" id="chips-site"></div>
+    </div>
+    <div class="card-list" id="list-site"></div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" onclick="openAdd()">＋</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Form sheet -->
+<div class="overlay" id="overlayForm" onclick="close('overlayForm')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="sheet-title" id="formTitle">登録</div>
+    <form id="mainForm" onsubmit="submitForm(event)">
+      <div id="formFields"></div>
+      <button type="submit" class="btn btn-primary" id="submitBtn">登録する</button>
+    </form>
+  </div>
+</div>
+
+<!-- Detail sheet -->
+<div class="overlay" id="overlayDetail" onclick="close('overlayDetail')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div id="detailInner"></div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="overlay" id="overlaySettings" onclick="close('overlaySettings')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="sheet-title">⚙️ カテゴリ管理</div>
+    <div class="cat-list" id="catList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="newCat" placeholder="新しいカテゴリ名" maxlength="20" style="font-size:16px">
+      <button type="button" class="cat-add-btn" onclick="addCat()">＋追加</button>
+    </div>
+    <hr class="divider">
+    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:10px">⚠️ 全データをリセットします（取り消し不可）</p>
+    <button class="btn btn-danger" onclick="clearAll()">全データを初期化する</button>
+  </div>
+</div>
+
+<!-- Confirm sheet -->
+<div class="overlay" id="overlayConfirm">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-height:auto">
+    <div class="handle"></div>
+    <div class="confirm-body">
+      <div class="confirm-icon">🗑️</div>
+      <p>本当に削除しますか？</p>
+      <strong id="confirmName"></strong>
+      <div class="btn-row">
+        <button class="btn btn-secondary" onclick="close('overlayConfirm')">キャンセル</button>
+        <button class="btn btn-danger" id="confirmBtn">削除する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  DB
+// ══════════════════════════════════════════
+const KEY = 'iketomo_v1';
+let db = {
+  categories: ['Claude Code', 'Manus', 'Skills', 'Claude Cowork'],
+  archives: [], materials: [], sites: []
+};
+let tab = 'archive';
+let catFilter = { archive: 'all', material: 'all', site: 'all' };
+let editing = { type: null, id: null };
+
+function loadDB() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if (d) {
+      db.categories = d.categories || db.categories;
+      db.archives  = d.archives  || [];
+      db.materials = d.materials || [];
+      db.sites     = d.sites     || [];
+    }
+  } catch(e) {}
+}
+function saveDB() { localStorage.setItem(KEY, JSON.stringify(db)); }
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg, c='#10b981') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.background = c;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+// ══════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════
+function open(id) {
+  document.getElementById(id).classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function close(id) {
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ══════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════
+function switchTab(t) {
+  tab = t;
+  ['archive','material','site'].forEach(x => {
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+    document.getElementById('panel-'+x).classList.toggle('active', x===t);
+  });
+  renderAll();
+}
+
+// ══════════════════════════════════════════
+//  CHIPS helper
+// ══════════════════════════════════════════
+function buildChips(type, values, renderFn) {
+  const el = document.getElementById('chips-'+type);
+  const opts = [{l:'すべて',v:'all'}, ...values.map(v=>({l:v,v}))];
+  el.innerHTML = opts.map(o=>`
+    <button class="chip${catFilter[type]===o.v?' active':''}"
+      data-v="${esc(o.v)}"
+      onclick="catFilter['${type}']=this.dataset.v;${renderFn}()">${esc(o.l)}</button>
+  `).join('');
+}
+
+// ══════════════════════════════════════════
+//  ARCHIVE render
+// ══════════════════════════════════════════
+function renderArchive() {
+  buildChips('archive', db.categories, 'renderArchive');
+  const q = document.getElementById('q-archive').value.toLowerCase();
+  let list = db.archives.filter(a => {
+    const mc = catFilter.archive==='all' || a.category===catFilter.archive;
+    const mq = !q || a.title.toLowerCase().includes(q) || (a.description||'').toLowerCase().includes(q);
+    return mc && mq;
+  }).sort((a,b)=>b.id-a.id);
+
+  document.getElementById('cnt-archive').textContent = db.archives.length;
+  const el = document.getElementById('list-archive');
+
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="eicon">🎬</div><p>アーカイブがまだありません<br>右下の ＋ から登録してください</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(a => {
+    const mc = db.materials.filter(m=>m.archiveId==a.id).length;
+    const sc = db.sites.filter(s=>s.archiveId==a.id).length;
+    return `
+    <div class="card" onclick="openDetail(${a.id})">
+      <div class="card-head">
+        <div class="card-title">${esc(a.title)}</div>
+        <div class="card-btns" onclick="event.stopPropagation()">
+          <button class="card-btn" onclick="openEdit('archive',${a.id})">✏️</button>
+          <button class="card-btn" onclick="askDelete('archive',${a.id})">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${a.date?`<span class="card-date">📅 ${esc(a.date)}</span>`:''}
+        ${a.category?`<span class="badge b-purple">${esc(a.category)}</span>`:''}
+      </div>
+      ${a.description?`<div class="card-desc">${esc(a.description)}</div>`:''}
+      <div class="card-foot">
+        ${a.videoUrl?`<a class="card-link" href="${esc(a.videoUrl)}" target="_blank" onclick="event.stopPropagation()">▶ 動画</a>`:''}
+        ${mc?`<span class="mini-badge">📄 <em>${mc}</em>件</span>`:''}
+        ${sc?`<span class="mini-badge">🌐 <em>${sc}</em>件</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  ARCHIVE detail
+// ══════════════════════════════════════════
+function openDetail(id) {
+  const a = db.archives.find(x=>x.id==id);
+  if (!a) return;
+  const mats  = db.materials.filter(m=>m.archiveId==id);
+  const sites = db.sites.filter(s=>s.archiveId==id);
+
+  let h = `
+    <div class="sheet-title">${esc(a.title)}</div>
+    <div class="detail-body">
+      <div class="card-meta" style="margin-bottom:10px">
+        ${a.date?`<span class="card-date">📅 ${esc(a.date)}</span>`:''}
+        ${a.category?`<span class="badge b-purple">${esc(a.category)}</span>`:''}
+      </div>
+      ${a.description?`<p>${esc(a.description)}</p>`:''}
+      ${a.videoUrl?`<div style="margin-bottom:12px"><a class="card-link" href="${esc(a.videoUrl)}" target="_blank">▶ 動画を見る →</a></div>`:''}
+    </div>
+  `;
+
+  if (mats.length) {
+    h += `<div class="detail-section"><h3>📄 関連資料（${mats.length}件）</h3>`;
+    mats.forEach(m => {
+      h += `<div class="linked-item">
+        <div class="linked-title">${esc(m.name)}</div>
+        <div class="linked-meta">
+          ${m.type?`<span class="badge b-blue">${esc(m.type)}</span>`:''}
+          ${m.url?`<a class="card-link" href="${esc(m.url)}" target="_blank">🔗 開く</a>`:''}
+        </div>
+        ${m.description?`<div class="linked-desc">${esc(m.description)}</div>`:''}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  if (sites.length) {
+    h += `<div class="detail-section"><h3>🌐 関連付属サイト（${sites.length}件）</h3>`;
+    sites.forEach(s => {
+      h += `<div class="linked-item">
+        <div class="linked-title">${esc(s.name)}</div>
+        <div class="linked-meta">
+          ${s.category?`<span class="badge b-green">${esc(s.category)}</span>`:''}
+          ${s.url?`<a class="card-link" href="${esc(s.url)}" target="_blank">🔗 開く</a>`:''}
+        </div>
+        ${s.description?`<div class="linked-desc">${esc(s.description)}</div>`:''}
+      </div>`;
+    });
+    h += `</div>`;
+  }
+
+  h += `<div style="margin-top:16px"><button class="btn btn-secondary" onclick="close('overlayDetail')">閉じる</button></div>`;
+  document.getElementById('detailInner').innerHTML = h;
+  open('overlayDetail');
+}
+
+// ══════════════════════════════════════════
+//  MATERIAL render
+// ══════════════════════════════════════════
+function renderMaterial() {
+  const types = [...new Set(db.materials.map(m=>m.type).filter(Boolean))];
+  buildChips('material', types, 'renderMaterial');
+
+  const q = document.getElementById('q-material').value.toLowerCase();
+  let list = db.materials.filter(m => {
+    const mc = catFilter.material==='all' || m.type===catFilter.material;
+    const mq = !q || m.name.toLowerCase().includes(q) || (m.description||'').toLowerCase().includes(q);
+    return mc && mq;
+  }).sort((a,b)=>b.id-a.id);
+
+  document.getElementById('cnt-material').textContent = db.materials.length;
+  const el = document.getElementById('list-material');
+
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="eicon">📄</div><p>資料がまだありません<br>右下の ＋ から登録してください</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(m => {
+    const arc = m.archiveId ? db.archives.find(a=>a.id==m.archiveId) : null;
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">${esc(m.name)}</div>
+        <div class="card-btns">
+          <button class="card-btn" onclick="openEdit('material',${m.id})">✏️</button>
+          <button class="card-btn" onclick="askDelete('material',${m.id})">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${m.type?`<span class="badge b-blue">${esc(m.type)}</span>`:''}
+        ${arc?`<span class="archive-tag" onclick="openDetail(${arc.id})">🎬 ${esc(arc.title)}</span>`:''}
+      </div>
+      ${m.description?`<div class="card-desc">${esc(m.description)}</div>`:''}
+      <div class="card-foot">
+        ${m.url?`<a class="card-link" href="${esc(m.url)}" target="_blank">🔗 資料を開く</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  SITE render
+// ══════════════════════════════════════════
+function renderSite() {
+  buildChips('site', db.categories, 'renderSite');
+
+  const q = document.getElementById('q-site').value.toLowerCase();
+  let list = db.sites.filter(s => {
+    const mc = catFilter.site==='all' || s.category===catFilter.site;
+    const mq = !q || s.name.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q);
+    return mc && mq;
+  }).sort((a,b)=>b.id-a.id);
+
+  document.getElementById('cnt-site').textContent = db.sites.length;
+  const el = document.getElementById('list-site');
+
+  if (!list.length) {
+    el.innerHTML = `<div class="empty"><div class="eicon">🌐</div><p>付属サイトがまだありません<br>右下の ＋ から登録してください</p></div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(s => {
+    const arc = s.archiveId ? db.archives.find(a=>a.id==s.archiveId) : null;
+    return `
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">${esc(s.name)}</div>
+        <div class="card-btns">
+          <button class="card-btn" onclick="openEdit('site',${s.id})">✏️</button>
+          <button class="card-btn" onclick="askDelete('site',${s.id})">🗑️</button>
+        </div>
+      </div>
+      <div class="card-meta">
+        ${s.category?`<span class="badge b-green">${esc(s.category)}</span>`:''}
+        ${arc?`<span class="archive-tag" onclick="openDetail(${arc.id})">🎬 ${esc(arc.title)}</span>`:''}
+      </div>
+      ${s.description?`<div class="card-desc">${esc(s.description)}</div>`:''}
+      <div class="card-foot">
+        ${s.url?`<a class="card-link" href="${esc(s.url)}" target="_blank">🔗 サイトを開く</a>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() { renderArchive(); renderMaterial(); renderSite(); }
+
+// ══════════════════════════════════════════
+//  FORM
+// ══════════════════════════════════════════
+function openAdd() {
+  editing = { type: tab, id: null };
+  const labels = { archive:'🎬 アーカイブ登録', material:'📄 資料登録', site:'🌐 付属サイト登録' };
+  document.getElementById('formTitle').textContent = labels[tab];
+  document.getElementById('submitBtn').textContent = '登録する';
+  buildFields(tab, null);
+  open('overlayForm');
+}
+
+function openEdit(type, id) {
+  const arr = getArr(type);
+  const item = arr.find(x=>x.id==id);
+  if (!item) return;
+  editing = { type, id };
+  const labels = { archive:'✏️ アーカイブ編集', material:'✏️ 資料編集', site:'✏️ 付属サイト編集' };
+  document.getElementById('formTitle').textContent = labels[type];
+  document.getElementById('submitBtn').textContent = '更新する';
+  buildFields(type, item);
+  open('overlayForm');
+}
+
+function val(item, key) { return item ? esc(item[key]||'') : ''; }
+
+function buildFields(type, item) {
+  const f = document.getElementById('formFields');
+  const catDatalist = `<datalist id="catDatalist">${db.categories.map(c=>`<option value="${esc(c)}">`).join('')}</datalist>`;
+  const arcOpts = db.archives.map(a=>`<option value="${a.id}"${item&&item.archiveId==a.id?' selected':''}>${esc(a.title)}</option>`).join('');
+
+  if (type==='archive') {
+    f.innerHTML = `
+      <div class="fg">
+        <label>講座名 <span style="color:var(--accent)">*</span></label>
+        <input type="text" name="title" value="${val(item,'title')}" placeholder="例：Claude Code 基礎講座" required>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>開催日</label>
+          <input type="date" name="date" value="${val(item,'date')}">
+        </div>
+        <div class="fg">
+          <label>カテゴリ</label>
+          ${catDatalist}
+          <input type="text" name="category" value="${val(item,'category')}" list="catDatalist" placeholder="選択 or 手入力">
+        </div>
+      </div>
+      <div class="fg">
+        <label>動画URL</label>
+        <input type="url" name="videoUrl" value="${val(item,'videoUrl')}" placeholder="https://...">
+      </div>
+      <div class="fg" style="margin-bottom:18px">
+        <label>説明・メモ</label>
+        <textarea name="description" placeholder="講座の内容や気づきなど">${item?(item.description||''):''}</textarea>
+      </div>
+    `;
+  } else if (type==='material') {
+    f.innerHTML = `
+      <div class="fg">
+        <label>資料名 <span style="color:var(--accent)">*</span></label>
+        <input type="text" name="name" value="${val(item,'name')}" placeholder="例：Claude Code 入門スライド" required>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>種類</label>
+          <select name="type">
+            <option value="">未分類</option>
+            ${['PDF','スライド','動画','テキスト','リンク','その他'].map(t=>`<option value="${t}"${item&&item.type===t?' selected':''}>${t}</option>`).join('')}
+          </select>
+        </div>
+        <div class="fg">
+          <label>関連講座</label>
+          <select name="archiveId">
+            <option value="">紐付けなし</option>
+            ${arcOpts}
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label>URL</label>
+        <input type="url" name="url" value="${val(item,'url')}" placeholder="https://...">
+      </div>
+      <div class="fg" style="margin-bottom:18px">
+        <label>説明・メモ</label>
+        <textarea name="description" placeholder="資料の内容や用途など">${item?(item.description||''):''}</textarea>
+      </div>
+    `;
+  } else {
+    f.innerHTML = `
+      <div class="fg">
+        <label>サイト名 <span style="color:var(--accent)">*</span></label>
+        <input type="text" name="name" value="${val(item,'name')}" placeholder="例：Claude Code 公式ドキュメント" required>
+      </div>
+      <div class="fg">
+        <label>URL <span style="color:var(--accent)">*</span></label>
+        <input type="url" name="url" value="${val(item,'url')}" placeholder="https://..." required>
+      </div>
+      <div class="row">
+        <div class="fg">
+          <label>カテゴリ</label>
+          ${catDatalist}
+          <input type="text" name="category" value="${val(item,'category')}" list="catDatalist" placeholder="選択 or 手入力">
+        </div>
+        <div class="fg">
+          <label>関連講座</label>
+          <select name="archiveId">
+            <option value="">紐付けなし</option>
+            ${arcOpts}
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:18px">
+        <label>説明・メモ</label>
+        <textarea name="description" placeholder="サイトの内容や活用法など">${item?(item.description||''):''}</textarea>
+      </div>
+    `;
+  }
+}
+
+function submitForm(e) {
+  e.preventDefault();
+  const fd = new FormData(e.target);
+  const data = {};
+  for (let [k,v] of fd.entries()) data[k] = v.trim();
+
+  // 新カテゴリを自動登録
+  if (data.category && !db.categories.includes(data.category)) {
+    db.categories.push(data.category);
+  }
+
+  const arr = getArr(editing.type);
+  if (editing.id) {
+    const i = arr.findIndex(x=>x.id==editing.id);
+    if (i>=0) arr[i] = {...arr[i], ...data};
+    toast('更新しました ✅');
+  } else {
+    arr.unshift({ id: Date.now(), createdAt: new Date().toISOString(), ...data });
+    toast('登録しました 🎉');
+  }
+  saveDB(); close('overlayForm'); renderAll();
+}
+
+// ══════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════
+function askDelete(type, id) {
+  const item = getArr(type).find(x=>x.id==id);
+  if (!item) return;
+  document.getElementById('confirmName').textContent = item.title||item.name;
+  document.getElementById('confirmBtn').onclick = () => doDelete(type, id);
+  open('overlayConfirm');
+}
+function doDelete(type, id) {
+  const key = type==='archive'?'archives':type==='material'?'materials':'sites';
+  db[key] = db[key].filter(x=>x.id!=id);
+  saveDB(); close('overlayConfirm'); renderAll();
+  toast('削除しました', '#ef4444');
+}
+
+function getArr(type) {
+  return type==='archive'?db.archives:type==='material'?db.materials:db.sites;
+}
+
+// ══════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════
+function openSettings() { renderCatList(); open('overlaySettings'); }
+
+function renderCatList() {
+  document.getElementById('catList').innerHTML = db.categories.map((c,i)=>`
+    <div class="cat-item">
+      <span>${esc(c)}</span>
+      <button class="cat-del" onclick="delCat(${i})" title="削除">✕</button>
+    </div>
+  `).join('');
+}
+
+function addCat() {
+  const el = document.getElementById('newCat');
+  const v = el.value.trim();
+  if (!v) return;
+  if (db.categories.includes(v)) { toast('既に存在します', '#f59e0b'); return; }
+  db.categories.push(v); el.value = '';
+  saveDB(); renderCatList(); renderAll();
+  toast('カテゴリを追加しました ✅');
+}
+
+function delCat(i) {
+  db.categories.splice(i, 1);
+  saveDB(); renderCatList(); renderAll();
+  toast('削除しました', '#f59e0b');
+}
+
+document.getElementById('newCat').addEventListener('keydown', e => {
+  if (e.key==='Enter') { e.preventDefault(); addCat(); }
+});
+
+function clearAll() {
+  if (!confirm('全データを初期化します。この操作は元に戻せません。よろしいですか？')) return;
+  db = { categories:['Claude Code','Manus','Skills','Claude Cowork'], archives:[], materials:[], sites:[] };
+  saveDB(); close('overlaySettings'); renderAll();
+  toast('初期化しました', '#ef4444');
+}
+
+// ══════════════════════════════════════════
+//  EXPORT / IMPORT
+// ══════════════════════════════════════════
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `iketomo_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('エクスポートしました 📤');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      const merge = confirm('既存データに追加しますか？\nOK → 追加（重複スキップ）\nキャンセル → 全置換');
+      if (merge) {
+        ['archives','materials','sites'].forEach(k => {
+          const ids = new Set(db[k].map(x=>x.id));
+          (d[k]||[]).forEach(x=>{ if(!ids.has(x.id)) db[k].push(x); });
+        });
+        if (d.categories) d.categories.forEach(c=>{ if(!db.categories.includes(c)) db.categories.push(c); });
+        toast('追加インポートしました 📥');
+      } else {
+        db = d;
+        toast('全置換インポートしました 📥');
+      }
+      saveDB(); renderAll();
+    } catch { toast('読み込みエラー', '#ef4444'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+loadDB();
+renderAll();
+</script>
+</body>
+</html>
