@@ -471,20 +471,20 @@ select option { background: #1e1e32; }
 </div>
 
 <!-- Form sheet -->
-<div class="overlay" id="overlayForm" onclick="close('overlayForm')">
+<div class="overlay" id="overlayForm" onclick="hideSheet('overlayForm')">
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div class="sheet-title" id="formTitle">登録</div>
     <form id="mainForm" onsubmit="submitForm(event)">
       <div id="formFields"></div>
       <button type="submit" class="btn btn-primary" id="submitBtn" style="margin-bottom:8px">登録する</button>
-      <button type="button" class="btn btn-secondary" onclick="close('overlayForm')">キャンセル</button>
+      <button type="button" class="btn btn-secondary" onclick="hideSheet('overlayForm')">キャンセル</button>
     </form>
   </div>
 </div>
 
 <!-- Detail sheet -->
-<div class="overlay" id="overlayDetail" onclick="close('overlayDetail')">
+<div class="overlay" id="overlayDetail" onclick="hideSheet('overlayDetail')">
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div id="detailInner"></div>
@@ -492,7 +492,7 @@ select option { background: #1e1e32; }
 </div>
 
 <!-- Memo Output sheet -->
-<div class="overlay" id="overlayMemo" onclick="close('overlayMemo')">
+<div class="overlay" id="overlayMemo" onclick="hideSheet('overlayMemo')">
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div class="sheet-title">📝 説明・メモ 出力</div>
@@ -501,7 +501,7 @@ select option { background: #1e1e32; }
 </div>
 
 <!-- URL Check sheet -->
-<div class="overlay" id="overlayUrlCheck" onclick="close('overlayUrlCheck')">
+<div class="overlay" id="overlayUrlCheck" onclick="hideSheet('overlayUrlCheck')">
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div class="sheet-title">🔗 URL確認</div>
@@ -510,7 +510,7 @@ select option { background: #1e1e32; }
 </div>
 
 <!-- Settings sheet -->
-<div class="overlay" id="overlaySettings" onclick="close('overlaySettings')">
+<div class="overlay" id="overlaySettings" onclick="hideSheet('overlaySettings')">
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div class="sheet-title">⚙️ カテゴリ管理</div>
@@ -534,7 +534,7 @@ select option { background: #1e1e32; }
       <p>本当に削除しますか？</p>
       <strong id="confirmName"></strong>
       <div class="btn-row">
-        <button class="btn btn-secondary" onclick="close('overlayConfirm')">キャンセル</button>
+        <button class="btn btn-secondary" onclick="hideSheet('overlayConfirm')">キャンセル</button>
         <button class="btn btn-danger" id="confirmBtn">削除する</button>
       </div>
     </div>
@@ -657,11 +657,11 @@ function compressImg(file) {
 // ══════════════════════════════════════════
 //  MODAL
 // ══════════════════════════════════════════
-function open(id) {
+function showSheet(id) {
   document.getElementById(id).classList.add('open');
   document.body.style.overflow = 'hidden';
 }
-function close(id) {
+function hideSheet(id) {
   document.getElementById(id).classList.remove('open');
   document.body.style.overflow = '';
 }
@@ -829,9 +829,9 @@ async function openDetail(id) {
     h += `</div>`;
   }
 
-  h += `<div style="margin-top:16px"><button class="btn btn-secondary" onclick="close('overlayDetail')">閉じる</button></div>`;
+  h += `<div style="margin-top:16px"><button class="btn btn-secondary" onclick="hideSheet('overlayDetail')">閉じる</button></div>`;
   document.getElementById('detailInner').innerHTML = h;
-  open('overlayDetail');
+  showSheet('overlayDetail');
 }
 
 // ══════════════════════════════════════════
@@ -935,7 +935,7 @@ function openAdd() {
   document.getElementById('formTitle').textContent = labels[tab];
   document.getElementById('submitBtn').textContent = '登録する';
   buildFields(tab, null);
-  open('overlayForm');
+  showSheet('overlayForm');
 }
 
 async function openEdit(type, id) {
@@ -953,7 +953,7 @@ async function openEdit(type, id) {
   document.getElementById('formTitle').textContent = labels[type];
   document.getElementById('submitBtn').textContent = '更新する';
   buildFields(type, item);
-  open('overlayForm');
+  showSheet('overlayForm');
 }
 
 function val(item, key) { return item ? esc(item[key]||'') : ''; }
@@ -1121,7 +1121,7 @@ async function submitForm(e) {
     }
   }
 
-  saveDB(); close('overlayForm'); renderAll();
+  saveDB(); hideSheet('overlayForm'); renderAll();
 }
 
 // ══════════════════════════════════════════
@@ -1132,14 +1132,14 @@ function askDelete(type, id) {
   if (!item) return;
   document.getElementById('confirmName').textContent = item.title||item.name;
   document.getElementById('confirmBtn').onclick = () => doDelete(type, id);
-  open('overlayConfirm');
+  showSheet('overlayConfirm');
 }
 
 async function doDelete(type, id) {
   const key = type==='archive'?'archives':type==='material'?'materials':'sites';
   db[key] = db[key].filter(x=>x.id!=id);
   if (type === 'archive') await idbDelByPrefix(`arc_${id}_`);
-  saveDB(); close('overlayConfirm'); renderAll();
+  saveDB(); hideSheet('overlayConfirm'); renderAll();
   toast('削除しました', '#ef4444');
 }
 
@@ -1160,8 +1160,8 @@ function openMemoOutput() {
   const total = groups.reduce((n, g) => n + g.items.length, 0);
 
   if (total === 0) {
-    document.getElementById('memoInner').innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-muted);font-size:0.82rem">説明・メモが登録されていません</div><button class="btn btn-secondary" onclick="close('overlayMemo')">閉じる</button>`;
-    open('overlayMemo'); return;
+    document.getElementById('memoInner').innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--text-muted);font-size:0.82rem">説明・メモが登録されていません</div><button class="btn btn-secondary" onclick="hideSheet('overlayMemo')">閉じる</button>`;
+    showSheet('overlayMemo'); return;
   }
 
   // 全メモをまとめたテキスト
@@ -1185,9 +1185,9 @@ function openMemoOutput() {
     });
   });
 
-  h += `<div style="margin-top:8px"><button class="btn btn-secondary" onclick="close('overlayMemo')">閉じる</button></div>`;
+  h += `<div style="margin-top:8px"><button class="btn btn-secondary" onclick="hideSheet('overlayMemo')">閉じる</button></div>`;
   document.getElementById('memoInner').innerHTML = h;
-  open('overlayMemo');
+  showSheet('overlayMemo');
 }
 
 function copyText(text, msg) {
@@ -1239,15 +1239,15 @@ function openUrlCheck() {
         </div>
       `).join('');
 
-  h += `<div style="margin-top:4px"><button class="btn btn-secondary" onclick="close('overlayUrlCheck')">閉じる</button></div>`;
+  h += `<div style="margin-top:4px"><button class="btn btn-secondary" onclick="hideSheet('overlayUrlCheck')">閉じる</button></div>`;
   document.getElementById('urlCheckInner').innerHTML = h;
-  open('overlayUrlCheck');
+  showSheet('overlayUrlCheck');
 }
 
 // ══════════════════════════════════════════
 //  SETTINGS
 // ══════════════════════════════════════════
-function openSettings() { renderCatList(); open('overlaySettings'); }
+function openSettings() { renderCatList(); showSheet('overlaySettings'); }
 
 function renderCatList() {
   document.getElementById('catList').innerHTML = db.categories.map((c,i)=>`
@@ -1284,7 +1284,7 @@ async function clearAll() {
   const tx = idb.transaction('imgs', 'readwrite');
   tx.objectStore('imgs').clear();
   db = { categories:['Claude Code','Manus','Skills','Claude Cowork'], archives:[], materials:[], sites:[] };
-  saveDB(); close('overlaySettings'); renderAll();
+  saveDB(); hideSheet('overlaySettings'); renderAll();
   toast('初期化しました', '#ef4444');
 }
 
