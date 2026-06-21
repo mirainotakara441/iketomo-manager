@@ -344,6 +344,28 @@ select option { background: #1e1e32; }
 }
 
 .divider { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+/* ── URL Check ── */
+.url-check-group { margin-bottom: 18px; }
+.url-check-group h3 { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; }
+.url-check-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 11px 12px; margin-bottom: 6px;
+  display: flex; align-items: center; gap: 10px;
+}
+.url-check-item .uci-info { flex: 1; min-width: 0; }
+.url-check-item .uci-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.url-check-item .uci-url { font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.url-open-btn {
+  flex-shrink: 0; padding: 7px 12px;
+  background: rgba(139,92,246,0.12); border: 1px solid var(--border-active);
+  border-radius: 8px; color: var(--accent); font-size: 0.75rem; font-weight: 700;
+  cursor: pointer; font-family: inherit; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 4px;
+  transition: background 0.15s;
+}
+.url-open-btn:active { background: rgba(139,92,246,0.25); }
+.url-check-empty { text-align: center; padding: 32px 0; color: var(--text-muted); font-size: 0.82rem; }
 </style>
 </head>
 <body>
@@ -352,6 +374,7 @@ select option { background: #1e1e32; }
 <header>
   <h1>📚 いけとも講座</h1>
   <div class="header-actions">
+    <button class="btn-icon" onclick="openUrlCheck()" title="URL確認">🔗</button>
     <button class="btn-icon" onclick="openSettings()" title="カテゴリ設定">⚙️</button>
     <button class="btn-icon" onclick="exportData()" title="エクスポート">📤</button>
     <button class="btn-icon" onclick="document.getElementById('importFile').click()" title="インポート">📥</button>
@@ -440,6 +463,15 @@ select option { background: #1e1e32; }
   <div class="sheet" onclick="event.stopPropagation()">
     <div class="handle"></div>
     <div id="detailInner"></div>
+  </div>
+</div>
+
+<!-- URL Check sheet -->
+<div class="overlay" id="overlayUrlCheck" onclick="close('overlayUrlCheck')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="handle"></div>
+    <div class="sheet-title">🔗 URL確認</div>
+    <div id="urlCheckInner"></div>
   </div>
 </div>
 
@@ -1079,6 +1111,49 @@ async function doDelete(type, id) {
 
 function getArr(type) {
   return type==='archive'?db.archives:type==='material'?db.materials:db.sites;
+}
+
+// ══════════════════════════════════════════
+//  URL CHECK
+// ══════════════════════════════════════════
+function openUrlCheck() {
+  const groups = [
+    {
+      label: '🎬 アーカイブ 動画URL',
+      items: db.archives.filter(a => a.videoUrl).map(a => ({ name: a.title, url: a.videoUrl }))
+    },
+    {
+      label: '📄 資料URL',
+      items: db.materials.filter(m => m.url).map(m => ({ name: m.name, url: m.url }))
+    },
+    {
+      label: '🌐 付属サイトURL',
+      items: db.sites.filter(s => s.url).map(s => ({ name: s.name, url: s.url }))
+    }
+  ].filter(g => g.items.length > 0);
+
+  const total = groups.reduce((n, g) => n + g.items.length, 0);
+
+  let h = total === 0
+    ? `<div class="url-check-empty">登録済みのURLがありません</div>`
+    : groups.map(g => `
+        <div class="url-check-group">
+          <h3>${g.label}（${g.items.length}件）</h3>
+          ${g.items.map(item => `
+            <div class="url-check-item">
+              <div class="uci-info">
+                <div class="uci-name">${esc(item.name)}</div>
+                <div class="uci-url">${esc(item.url)}</div>
+              </div>
+              <a class="url-open-btn" href="${esc(item.url)}" target="_blank" rel="noopener">開く →</a>
+            </div>
+          `).join('')}
+        </div>
+      `).join('');
+
+  h += `<div style="margin-top:4px"><button class="btn btn-secondary" onclick="close('overlayUrlCheck')">閉じる</button></div>`;
+  document.getElementById('urlCheckInner').innerHTML = h;
+  open('overlayUrlCheck');
 }
 
 // ══════════════════════════════════════════
